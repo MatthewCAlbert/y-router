@@ -2,6 +2,15 @@
 
 A Cloudflare Worker that translates between Anthropic's Claude API and OpenAI-compatible APIs, enabling you to use Claude Code with OpenRouter and other OpenAI-compatible providers.
 
+## Features
+
+- 🔄 **API Translation**: Converts between Anthropic and OpenAI API formats
+- 🌐 **Multiple Deployments**: Supports Cloudflare Workers and Google Cloud Run
+- 📡 **Streaming Support**: Handles both streaming and non-streaming responses
+- 🚀 **Easy Setup**: One-line installation script available
+- 🔧 **Flexible Configuration**: Support for multiple providers and models
+- 🎯 **Claude Code Ready**: Optimized for Claude Code integration
+
 ## Quick Usage
 
 ### One-line Install (Recommended)
@@ -58,42 +67,13 @@ alias c2='ANTHROPIC_BASE_URL="https://api.moonshot.ai/anthropic/" ANTHROPIC_API_
 
 Add these aliases to your shell config file (`~/.bashrc` or `~/.zshrc`), then use `c1` or `c2` to switch between configurations.
 
-## GitHub Actions Usage
+## Deployment Options
 
-To use Claude Code in GitHub Actions workflows, add the environment variable to your workflow:
-
-```yaml
-env:
-  ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
-```
-
-Set `ANTHROPIC_BASE_URL` to `https://cc.yovy.app` in your repository secrets.
-
-Example workflows:
-- [Interactive Claude Code](.github/workflows/claude.yml) - Responds to @claude mentions
-- [Automated Code Review](.github/workflows/claude-code-review.yml) - Automatic PR reviews
-
-## What it does
-
-y-router acts as a translation layer that:
-- Accepts requests in Anthropic's API format (`/v1/messages`)
-- Converts them to OpenAI's chat completions format
-- Forwards to OpenRouter (or any OpenAI-compatible API)
-- Translates the response back to Anthropic's format
-- Supports both streaming and non-streaming responses
-
-## Perfect for Claude Code + OpenRouter
-
-This allows you to use [Claude Code](https://claude.ai/code) with OpenRouter's vast selection of models by:
-1. Pointing Claude Code to your y-router deployment
-2. Using your OpenRouter API key
-3. Accessing Claude models available on OpenRouter through Claude Code's interface
-
-## Setup
+### Cloudflare Workers (Recommended)
 
 1. **Clone and deploy:**
    ```bash
-   git clone <repo>
+   git clone https://github.com/your-username/y-router.git
    cd y-router
    npm install -g wrangler
    wrangler deploy
@@ -110,11 +90,94 @@ This allows you to use [Claude Code](https://claude.ai/code) with OpenRouter's v
    - Use your OpenRouter API key
    - Enjoy access to Claude models via OpenRouter!
 
-## Environment Variables
+### Google Cloud Run
 
-- `OPENROUTER_BASE_URL` (optional): Base URL for the target API. Defaults to `https://openrouter.ai/api/v1`
+1. **Deploy to Cloud Run:**
+   ```bash
+   git clone https://github.com/your-username/y-router.git
+   cd y-router
+   npm run deploy:cloud-run
+   ```
 
-## API Usage
+2. **Set environment variables:**
+   ```bash
+   gcloud run services update y-router --set-env-vars OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+   ```
+
+### Local Development
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start development server:**
+   ```bash
+   npm run dev:local
+   ```
+
+3. **Test with curl:**
+   ```bash
+   curl -X POST http://localhost:8080/v1/messages \
+     -H "Content-Type: application/json" \
+     -H "x-api-key: your-openrouter-key" \
+     -d '{
+       "model": "claude-sonnet-4-20250514",
+       "messages": [{"role": "user", "content": "Hello, Claude"}],
+       "max_tokens": 100
+     }'
+   ```
+
+## GitHub Actions Integration
+
+To use Claude Code in GitHub Actions workflows, add the environment variable to your workflow:
+
+```yaml
+env:
+  ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+```
+
+Set `ANTHROPIC_BASE_URL` to `https://cc.yovy.app` in your repository secrets.
+
+### Example Workflows
+
+This repository includes example GitHub Actions workflows:
+
+- **[Interactive Claude Code](.github/workflows/claude.yml)** - Responds to @claude mentions in issues and pull requests
+- **[Automated Code Review](.github/workflows/claude-code-review.yml)** - Automatic PR reviews using Claude Code
+
+To use these workflows:
+1. Copy the workflow files to your repository's `.github/workflows/` directory
+2. Set the required secrets in your repository settings
+3. The workflows will automatically trigger based on their configured events
+
+## How It Works
+
+y-router acts as a translation layer that:
+- Accepts requests in Anthropic's API format (`/v1/messages`)
+- Converts them to OpenAI's chat completions format
+- Forwards to OpenRouter (or any OpenAI-compatible API)
+- Translates the response back to Anthropic's format
+- Supports both streaming and non-streaming responses
+
+## Perfect for Claude Code + OpenRouter
+
+This allows you to use [Claude Code](https://claude.ai/code) with OpenRouter's vast selection of models by:
+1. Pointing Claude Code to your y-router deployment
+2. Using your OpenRouter API key
+3. Accessing Claude models available on OpenRouter through Claude Code's interface
+
+## API Reference
+
+### Endpoints
+
+- `GET /` - Landing page with installation instructions
+- `GET /install.sh` - One-line installation script
+- `GET /terms` - Terms of service
+- `GET /privacy` - Privacy policy
+- `POST /v1/messages` - Main API endpoint (Anthropic format)
+
+### API Usage
 
 Send requests to `/v1/messages` using Anthropic's format:
 
@@ -129,11 +192,51 @@ curl -X POST https://cc.yovy.app/v1/messages \
   }'
 ```
 
+### Streaming Response
+
+For streaming responses, include `"stream": true` in your request:
+
+```bash
+curl -X POST https://cc.yovy.app/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: your-openrouter-key" \
+  -d '{
+    "model": "claude-sonnet-4-20250514",
+    "messages": [{"role": "user", "content": "Hello, Claude"}],
+    "max_tokens": 100,
+    "stream": true
+  }'
+```
+
+## Environment Variables
+
+- `OPENROUTER_BASE_URL` (optional): Base URL for the target API. Defaults to `https://openrouter.ai/api/v1`
+
 ## Development
 
 ```bash
-npm run dev    # Start development server
-npm run deploy # Deploy to Cloudflare Workers
+npm run dev        # Start Cloudflare Workers development server
+npm run dev:local  # Start local Express server
+npm run deploy     # Deploy to Cloudflare Workers
+npm run deploy:cloud-run  # Deploy to Google Cloud Run
+```
+
+## Project Structure
+
+```
+y-router/
+├── index.ts              # Main Cloudflare Worker entry point
+├── server.ts             # Express server for local development
+├── formatRequest.ts      # Anthropic to OpenAI request conversion
+├── formatResponse.ts     # OpenAI to Anthropic response conversion
+├── streamResponse.ts     # Streaming response handling
+├── installSh.ts          # Installation script content
+├── indexHtml.ts          # Landing page HTML
+├── termsHtml.ts          # Terms of service page
+├── privacyHtml.ts        # Privacy policy page
+├── Dockerfile            # Docker configuration for Cloud Run
+├── wrangler.toml         # Cloudflare Workers configuration
+└── .github/workflows/    # GitHub Actions workflows
 ```
 
 ## Thanks
